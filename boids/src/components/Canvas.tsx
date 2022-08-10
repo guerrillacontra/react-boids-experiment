@@ -20,7 +20,7 @@ function Canvas(props: CanvasProps) {
     }, []);
 
     return (
-        <canvas className="canvas rounded-lg" ref={canvas}/>
+        <canvas className="canvas" ref={canvas} width="800" height="640"/>
     )
 }
 

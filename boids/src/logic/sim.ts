@@ -1,5 +1,6 @@
 import {createRealtimeUpdate} from "./realtime";
 import canvas from "../components/Canvas";
+import {Boid, createRandomlyOnACanvas} from "./boid";
 
 /**
  * A simulation that can have a number of circle 'boids' moving about a 2d html canvas
@@ -17,6 +18,7 @@ class Sim {
     showGrid:boolean;
     showFPS:boolean;
     enablePerformanceMode:boolean;
+    boids:Boid[];
 
     constructor() {
         this.canvas = null;
@@ -24,6 +26,7 @@ class Sim {
         this.showGrid = false;
         this.showFPS = false;
         this.enablePerformanceMode = false;
+        this.boids =[];
     }
 
     init(canvas:HTMLCanvasElement):void {
@@ -38,28 +41,34 @@ class Sim {
         createRealtimeUpdate(60, window, this.update.bind(this));
     }
 
-    private update(dt:number):void {
-
-    }
-
     spawn(amount:number):void {
-        if(!canvas){
+        if(!this.canvas){
             console.error('Simulation has not been initialised');
             return;
         }
 
+        //Todo: Clear spatial caches
+
+        for(let i = 0; i < amount;i++){
+            this.boids.push(createRandomlyOnACanvas(this.canvas, 4, 8, '#FFFFFFFF', 64));
+        }
+
+        //Todo: Regenerate spatial caches
     }
 
     clear():void{
-        if(!canvas){
+        if(!this.canvas){
             console.error('Simulation has not been initialised');
             return;
         }
 
+        //Todo: Clear spatial caches
+
+        this.boids.length = 0;
     }
 
     setShowGrid(on: boolean): void {
-        if(!canvas){
+        if(!this.canvas){
             console.error('Simulation has not been initialised');
             return;
         }
@@ -67,7 +76,7 @@ class Sim {
     }
 
     setPerformanceMode(on: boolean): void {
-        if(!canvas){
+        if(!this.canvas){
             console.error('Simulation has not been initialised');
             return;
         }
@@ -75,11 +84,39 @@ class Sim {
     }
 
     setShowFPS(on: boolean): void {
-        if(!canvas){
+        if(!this.canvas){
             console.error('Simulation has not been initialised');
             return;
         }
         this.showFPS = on;
+    }
+
+
+    private update(dt:number):void {
+
+        if(!this.ctx || !this.canvas)return;
+
+        const ctx = this.ctx;
+        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.renderBoids(dt);
+    }
+
+
+    renderBoids(dt:number) {
+
+        if(!this.ctx)return;
+
+        const ctx = this.ctx;
+
+        for (let i: number = 0; i < this.boids.length; i++) {
+            const boid: Boid = this.boids[i];
+            ctx.beginPath();
+            ctx.lineWidth = 1;
+            ctx.arc(boid.pos.x, boid.pos.y, boid.radius, 0, 2 * Math.PI);
+            ctx.fillStyle = boid.colourHEX;
+            ctx.fill();
+            ctx.stroke();
+        }
     }
 }
 
