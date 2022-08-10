@@ -1,6 +1,7 @@
-import React, {createRef, Ref, useState} from "react";
+import React, {Ref, useState} from "react";
 import Toolbar from "./Toolbar";
 import Canvas from "./Canvas";
+import Sim from "../logic/sim";
 
 function App() {
     //Default values for the sim and UI to start with
@@ -12,39 +13,40 @@ function App() {
     const [boidsCount, setBoidsCount] = useState(0);
 
     //Connect to the canvas
-
-    const sim:any = {};
+    const sim:Sim = new Sim();
 
     const onCanvasReady = (canvasRef:Ref<HTMLCanvasElement>):void =>{
-        // @ts-ignore
-        console.log(canvasRef.current.getContext("2d")!);
         //Setup the sim
-        //sim.setup(canvasRef.current, defaultShowGrid, defaultEnablePerformance, defaultShowFPS);
+        // @ts-ignore
+        sim.init(canvasRef?.current);
+        sim.setShowGrid(defaultShowGrid);
+        sim.setShowFPS(defaultShowFPS);
+        sim.setPerformanceMode(defaultEnablePerformance);
     }
 
 
     //Sim hooks from the UI
 
     const onSpawnClicked = () => {
-        //sim.spawn(25);
+        sim.spawn(25);
         setBoidsCount(prevState => prevState+25);
     };
 
     const onClearClicked = () => {
-        //sim.clear();
-        setBoidsCount(prevState => 0);
+        sim.clear();
+        setBoidsCount(0);
     };
 
     const onGridToggled = (checked: boolean) => {
-        //sim.setGrid(checked);
+        sim.setShowGrid(checked);
     };
 
     const onPerformanceToggled = (checked: boolean) => {
-        //sim.setPerformance(checked);
+        sim.setPerformanceMode(checked);
     };
 
     const onFpsToggled = (checked: boolean) => {
-        //sim.setFPS(checked);
+        sim.setShowFPS(checked);
     };
 
     return (
