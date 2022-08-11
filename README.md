@@ -1,4 +1,4 @@
-# Boids Experient
+# Boids Experiment
 ## Made with Vite | React 18 | Tailwind CSS | TypeScript | HTML5 Canvas
 
 ### What is this?
@@ -27,8 +27,8 @@ x Reasonably clean...
 
 There is a low and high performance mode that can be toggled via the UI,
 what this does is swap between a O(n^2) collision sweep and a O(2^n) complexity
-which significanly improves the end result.
+which significantly improves the end result.
 
-The boids collide fairly well even in the optmized settings and the code is clean
+The boids collide fairly well even in the optimized settings and the code is clean
 enough for people to learn from if they woud like to.
  
