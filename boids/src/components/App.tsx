@@ -6,6 +6,7 @@ import Sim from "../logic/sim";
 //Connect to the canvas
 const sim: Sim = new Sim();
 
+
 function App() {
     //Default values for the sim and UI to start with
     const defaultShowGrid = true;
