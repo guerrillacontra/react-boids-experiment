@@ -29,7 +29,7 @@ function SimulationCanvas(props: CanvasProps) {
     }, []);
 
     return (
-        <canvas className="canvas" ref={canvas} width="800" height="640"/>
+        <canvas className="canvas rounded-xl" ref={canvas} width="800" height="640"/>
     )
 }
 
