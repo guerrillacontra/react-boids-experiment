@@ -14,7 +14,7 @@ const Button = (props: ButtonProp) => {
 
     return (
         <button onClick={onInputChanged}
-                className="w-24 h-8 border-2 border-amber-50 rounded text-white">
+                className="w-24 h-8 border-2 border-amber-50 rounded text-white select-none">
                 {props.title}
         </button>
     )
@@ -45,7 +45,7 @@ const Toggle = (props: ToggleProps) => {
                 checked={isChecked}
                 onChange={toggle}
             />
-            <label className="text-gray-100">
+            <label className="text-gray-100 select-none">
                 {props.title}
             </label>
 

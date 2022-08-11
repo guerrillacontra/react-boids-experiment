@@ -52,7 +52,7 @@ class Sim {
 
         this.grid = generateGridFromCanvas(canvas, 64, '#ffe282');
 
-        createRealtimeUpdate(60, window, this.update.bind(this));
+        createRealtimeUpdate(60, window, this.tick.bind(this));
     }
 
     hasInit(): boolean {
@@ -112,20 +112,25 @@ class Sim {
     }
 
 
-    private update(dt: number): void {
+    private tick(dt: number, fps:number): void {
 
         if (!this.ctx || !this.canvas) return;
 
+        const canvas = this.canvas;
+        const ctx = this.ctx;
+
+        //Collision detection and response
         if(this.enablePerformanceMode){
             this.fastCollisions();
         }else
         {
-            this.slowCollisions(this.boids);
+            this.collideBoidsTogether(this.boids);
         }
 
-        for (let i = 0; i < this.boids.length; i++) {
-            const boid: Boid = this.boids[i];
-            const collision = collideAndBounceOffCanvas(boid, this.canvas);
+
+        //Bounce boids off walls and move them
+        this.boids.forEach(boid=>{
+            const collision = collideAndBounceOffCanvas(boid, canvas);
 
             if (collision) {
                 boid.pos = collision.newPos;
@@ -133,32 +138,23 @@ class Sim {
             }
 
             update(boid, dt);
-        }
+        });
 
-        const ctx = this.ctx;
+        //Rendering
+
         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
         if (this.showGrid) {
-
-            const coldCell = colours.white();
-            const hotCell = colours.black();
-
-            if(this.enablePerformanceMode){
-                iterateGrid(this.grid, cell => {
-                    cell.colourHEX = rgbToHex(blendRGB(coldCell, hotCell, cell.boids.length/32));
-                });
-            }else{
-                iterateGrid(this.grid, cell => {
-                    cell.colourHEX = rgbToHex(coldCell);
-                });
-            }
-
-            renderTiles(ctx, this.grid, CELL_SIZE);
-            renderGridLines(this.grid, CELL_SIZE, ctx, 0.25);
+            this.renderGrid(ctx);
         }
 
         this.renderBoids();
+
+        if(this.showFPS){
+            this.renderFPS(ctx, fps);
+        }
     }
+
 
     private fastCollisions() {
 
@@ -176,12 +172,13 @@ class Sim {
         });
 
         iterateGrid(this.grid, cell => {
-            this.slowCollisions(cell.boids);
+            this.collideBoidsTogether(cell.boids);
         });
     }
 
-    private slowCollisions(boids:Boid[]){
-        //Low performance n^2 boid v boid collision + response
+    private collideBoidsTogether(boids:Boid[]){
+        //Low performance n^2 boid v boid collision + response with large amounts
+        //of boids
 
         for (let i = 0; i < boids.length; i++) {
             const a: Boid = boids[i];
@@ -212,6 +209,34 @@ class Sim {
                 }
             }
         }
+    }
+
+    //Rendering
+
+    private renderGrid(ctx:CanvasRenderingContext2D){
+        const coldCell = colours.white();
+        const hotCell = colours.black();
+
+        if(this.enablePerformanceMode){
+            iterateGrid(this.grid, cell => {
+                cell.colourHEX = rgbToHex(blendRGB(coldCell, hotCell, cell.boids.length/32));
+            });
+        }else{
+            iterateGrid(this.grid, cell => {
+                cell.colourHEX = rgbToHex(coldCell);
+            });
+        }
+
+        renderTiles(ctx, this.grid, CELL_SIZE);
+        renderGridLines(this.grid, CELL_SIZE, ctx, 0.25);
+    }
+
+    private renderFPS(ctx:CanvasRenderingContext2D, fps:number){
+        ctx.fillStyle = "#494949";
+        ctx.fillRect(5,32,75,24);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '16px Verdana';
+        ctx.fillText(`FPS: ${fps.toFixed(0)}`, 10, 50);
     }
 
 
