@@ -1,5 +1,5 @@
 import {createRealtimeUpdate} from "./realtime";
-import {Boid, createRandomlyOnACanvas} from "./boid";
+import {Boid, createRandomlyOnACanvas, move, randomizeVelocityDirection} from "./boid";
 
 /**
  * A simulation that can have a number of circle 'boids' moving about a 2d html canvas
@@ -53,7 +53,9 @@ class Sim {
         //Todo: Clear spatial caches
 
         for(let i = 0; i < amount;i++){
-            this.boids.push(createRandomlyOnACanvas(this.canvas, 4, 8, '#FFFFFFFF', 64));
+            const boid:Boid = createRandomlyOnACanvas(this.canvas, 4, 8, '#FFFFFFFF', 64);
+            randomizeVelocityDirection(boid);
+            this.boids.push(boid);
         }
 
         //Todo: Regenerate spatial caches
@@ -96,6 +98,11 @@ class Sim {
 
 
     private update(dt:number):void {
+
+        for(let i = 0; i < this.boids.length;i++){
+            const boid:Boid = this.boids[i];
+            move(boid, dt);
+        }
 
         if(!this.ctx || !this.canvas)return;
 

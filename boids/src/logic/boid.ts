@@ -1,4 +1,5 @@
 import {Vector2} from "./vector2";
+import * as vector from "./vector2";
 
 export type Boid = {
     pos:Vector2,
@@ -13,7 +14,6 @@ export type Boid = {
      */
     collisionCoolDownSeconds:number
 }
-
 
 export const createRandomlyOnACanvas = (canvas:HTMLCanvasElement, minRadius:number, maxRadius:number, colourHEX:string, speed:number):Boid => {
 
@@ -34,5 +34,14 @@ export const createRandomlyOnACanvas = (canvas:HTMLCanvasElement, minRadius:numb
         collisionCoolDownSeconds:0,
         speed
     }
+}
 
+export const randomizeVelocityDirection = (boid:Boid):void => {
+    const dir: number = Math.random() * (Math.PI * 2);
+    boid.vel = vector.scale(vector.radiansToVector(dir), boid.speed);
+}
+
+export const move = (boid:Boid, dt:number):void => {
+    boid.pos.x += boid.vel.x * dt;
+    boid.pos.y += boid.vel.y * dt;
 }
