@@ -31,4 +31,5 @@ which significantly improves the end result.
 
 The boids collide fairly well even in the optimized settings and the code is clean
 enough for people to learn from if they woud like to.
- 
+
+You may also find some of the math utilities such as the Vector2 handy.
