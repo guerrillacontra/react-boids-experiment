@@ -8,9 +8,9 @@ import {
     randomizeVelocityDirection
 } from "./boid";
 import {blendRGB, colours, rgbToHex} from "./colour";
-import {Cell, generateGridFromCanvas, renderGridLines, renderTiles} from "./grid";
+import {Cell, generateGridFromCanvas, getCellFromCanvasPos, iterateGrid, renderGridLines, renderTiles} from "./grid";
 
-const CELL_SIZE = 80;
+const CELL_SIZE = 64;
 
 /**
  * A simulation that can have a number of circle 'boids' moving about a 2d html canvas
@@ -116,17 +116,82 @@ class Sim {
 
         if (!this.ctx || !this.canvas) return;
 
-        //Low performance n^2 boid v boid collision + response
+        if(this.enablePerformanceMode){
+            this.fastCollisions();
+        }else
+        {
+            this.slowCollisions(this.boids);
+        }
 
         for (let i = 0; i < this.boids.length; i++) {
-            const a: Boid = this.boids[i];
+            const boid: Boid = this.boids[i];
+            const collision = collideAndBounceOffCanvas(boid, this.canvas);
 
-            for (let k = 0; k < this.boids.length; k++) {
+            if (collision) {
+                boid.pos = collision.newPos;
+                boid.vel = collision.newVelocity;
+            }
+
+            update(boid, dt);
+        }
+
+        const ctx = this.ctx;
+        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        if (this.showGrid) {
+
+            const coldCell = colours.white();
+            const hotCell = colours.black();
+
+            if(this.enablePerformanceMode){
+                iterateGrid(this.grid, cell => {
+                    cell.colourHEX = rgbToHex(blendRGB(coldCell, hotCell, cell.boids.length/32));
+                });
+            }else{
+                iterateGrid(this.grid, cell => {
+                    cell.colourHEX = rgbToHex(coldCell);
+                });
+            }
+
+            renderTiles(ctx, this.grid, CELL_SIZE);
+            renderGridLines(this.grid, CELL_SIZE, ctx, 0.25);
+        }
+
+        this.renderBoids();
+    }
+
+    private fastCollisions() {
+
+        //Subsets all boids into cells so the n^2 can work with a
+        //lower amount of candidates at once and is much faster.
+
+        iterateGrid(this.grid, cell => {
+            cell.boids = [];
+        });
+
+        this.boids.forEach(b=>{
+            const cell = getCellFromCanvasPos(this.grid,CELL_SIZE, b.pos);
+            if(!cell)return;
+            cell.boids.push(b);
+        });
+
+        iterateGrid(this.grid, cell => {
+            this.slowCollisions(cell.boids);
+        });
+    }
+
+    private slowCollisions(boids:Boid[]){
+        //Low performance n^2 boid v boid collision + response
+
+        for (let i = 0; i < boids.length; i++) {
+            const a: Boid = boids[i];
+
+            for (let k = 0; k < boids.length; k++) {
 
                 //same boid
                 if (k === i) continue;
 
-                const b: Boid = this.boids[k];
+                const b: Boid = boids[k];
 
                 const avb = collideAndBounceOffOtherBoid(a, b);
 
@@ -147,29 +212,6 @@ class Sim {
                 }
             }
         }
-
-
-        for (let i = 0; i < this.boids.length; i++) {
-            const boid: Boid = this.boids[i];
-            const collision = collideAndBounceOffCanvas(boid, this.canvas);
-
-            if (collision) {
-                boid.pos = collision.newPos;
-                boid.vel = collision.newVelocity;
-            }
-
-            update(boid, dt);
-        }
-
-        const ctx = this.ctx;
-        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-        if (this.showGrid) {
-            renderTiles(ctx, this.grid, CELL_SIZE);
-            renderGridLines(this.grid, CELL_SIZE, ctx, 0.25);
-        }
-
-        this.renderBoids();
     }
 
 

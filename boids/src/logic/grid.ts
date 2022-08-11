@@ -54,6 +54,19 @@ export const iterateGrid = (cells: Cell[][], callback: (cell: Cell) => void): vo
     }
 }
 
+export const getCellFromCanvasPos = (grid:Cell[][], cellSize:number, pos:Vector2) : Cell|null => {
+
+    const row = Math.floor(pos.y / cellSize);
+    const col = Math.floor(pos.x / cellSize);
+
+    const rows: number = grid.length;
+    const columns: number = grid[0].length;
+
+    if(row < 0 || row >= rows || col < 0 || col >= columns)return null;
+
+    return grid[row][col];
+}
+
 export const renderGridLines = (cells: Cell[][], cellSize: number, ctx: CanvasRenderingContext2D, lineWidth: number): void => {
 
     const rows: number = cells.length;
@@ -81,7 +94,7 @@ export const renderTiles = (ctx: CanvasRenderingContext2D, grid: Cell[][], cellS
 
     iterateGrid(grid, (cell) => {
         ctx.fillStyle = cell.colourHEX;
-        ctx.fillRect(cell.canvasPos.x, cell.canvasPos.y, cellSize, cellSize);
+        ctx.fillRect(cell.gridPos.column*cellSize, cell.gridPos.row*cellSize, cellSize, cellSize);
         return true;
     });
 }
