@@ -1,5 +1,4 @@
 import {createRealtimeUpdate} from "./realtime";
-import canvas from "../components/Canvas";
 import {Boid, createRandomlyOnACanvas} from "./boid";
 
 /**
@@ -39,6 +38,10 @@ class Sim {
         this.ctx = this.canvas.getContext("2d")!;
 
         createRealtimeUpdate(60, window, this.update.bind(this));
+    }
+
+    hasInit():boolean {
+        return this.canvas !== null;
     }
 
     spawn(amount:number):void {

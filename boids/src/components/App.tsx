@@ -1,7 +1,10 @@
-import React, {Ref, useState} from "react";
+import React, {useState} from "react";
 import Toolbar from "./Toolbar";
-import Canvas from "./Canvas";
+import SimulationCanvas from "./SimulationCanvas";
 import Sim from "../logic/sim";
+
+//Connect to the canvas
+const sim: Sim = new Sim();
 
 function App() {
     //Default values for the sim and UI to start with
@@ -12,24 +15,11 @@ function App() {
     //The only dynamic UI item between the simulation and react
     const [boidsCount, setBoidsCount] = useState(0);
 
-    //Connect to the canvas
-    const sim:Sim = new Sim();
-
-    const onCanvasReady = (canvasRef:Ref<HTMLCanvasElement>):void =>{
-        //Setup the sim
-        // @ts-ignore
-        sim.init(canvasRef?.current);
-        sim.setShowGrid(defaultShowGrid);
-        sim.setShowFPS(defaultShowFPS);
-        sim.setPerformanceMode(defaultEnablePerformance);
-    }
-
-
     //Sim hooks from the UI
 
     const onSpawnClicked = () => {
         sim.spawn(25);
-        setBoidsCount(prevState => prevState+25);
+        setBoidsCount(prevState => prevState + 25);
     };
 
     const onClearClicked = () => {
@@ -57,7 +47,7 @@ function App() {
                      performanceChecked={defaultEnablePerformance} performanceToggled={onPerformanceToggled}
                      fpsChecked={defaultShowFPS} fpsToggled={onFpsToggled}/>
             <div className="flex justify-center mt-4">
-                <Canvas canvasReady={onCanvasReady}/>
+                <SimulationCanvas sim={sim}/>
             </div>
         </div>
     )
