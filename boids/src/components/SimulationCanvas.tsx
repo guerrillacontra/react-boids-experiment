@@ -1,7 +1,6 @@
 import React, {createRef, useEffect, Ref} from "react";
 import "./Canvas.css"
-import Sim from "../logic/sim";
-import {generateGridFromCanvas} from "../logic/grid";
+import {Sim} from "../logic/sim";
 
 export type CanvasProps = {
     sim: Sim,
@@ -20,17 +19,12 @@ function SimulationCanvas(props: CanvasProps) {
 
     useEffect(() => {
 
-        if (sim.hasInit()) return;
-
-        const canvas:HTMLCanvasElement = canvasRef?.current!;
+        const canvas: HTMLCanvasElement = canvasRef?.current!;
 
         sim.init(canvas);
         sim.setShowGrid(defaultShowGrid);
         sim.setShowFPS(defaultShowFPS);
         sim.setPerformanceMode(defaultEnablePerformance);
-
-
-
 
     }, []);
 

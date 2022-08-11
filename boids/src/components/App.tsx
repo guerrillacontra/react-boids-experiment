@@ -1,11 +1,9 @@
 import React, {useState} from "react";
 import Toolbar from "./Toolbar";
 import SimulationCanvas from "./SimulationCanvas";
-import Sim from "../logic/sim";
+import {createSim, Sim} from "../logic/sim";
 
-//Connect to the canvas
-const sim: Sim = new Sim();
-
+const sim: Sim = createSim();
 
 function App() {
     //Default values for the sim and UI to start with

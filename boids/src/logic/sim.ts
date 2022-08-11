@@ -1,135 +1,124 @@
-import {createRealtimeUpdate} from "./realtime";
 import {
     Boid,
     collideAndBounceOffCanvas,
     collideAndBounceOffOtherBoid,
     createRandomlyOnACanvas,
-    update,
-    randomizeVelocityDirection
+    randomizeVelocityDirection,
+    update
 } from "./boid";
-import {blendRGB, colours, rgbToHex} from "./colour";
 import {Cell, generateGridFromCanvas, getCellFromCanvasPos, iterateGrid, renderGridLines, renderTiles} from "./grid";
+import {createRealtimeUpdate} from "./realtime";
+import {blendRGB, colours, rgbToHex} from "./colour";
 
-const CELL_SIZE = 64;
 
-/**
- * A simulation that can have a number of circle 'boids' moving about a 2d html canvas
- * in realtime.
- *
- * The boids will bounce off the canvas edges and each other with correct collision detection
- * and physics as well as indicate when a collision has happened.
- *
- * You can decide to render a 2D grid, show the FPS and swap between a low/high performance mode
- * in realtime as well as add/remove boids from the sim.
- */
-class Sim {
-    canvas: HTMLCanvasElement | null;
-    ctx: CanvasRenderingContext2D | null;
-    showGrid: boolean;
-    showFPS: boolean;
-    enablePerformanceMode: boolean;
-    boids: Boid[];
-    grid: Cell[][];
+export interface Sim {
+    init: (canvasElement: HTMLCanvasElement) => void,
+    hasInit: () => boolean,
+    spawn: (count: number) => void,
+    clear: () => void,
+    setShowGrid: (on: boolean) => void,
+    setPerformanceMode: (on: boolean) => void,
+    setShowFPS: (on: boolean) => void,
+}
 
-    constructor() {
-        this.canvas = null;
-        this.ctx = null;
-        this.showGrid = false;
-        this.showFPS = false;
-        this.enablePerformanceMode = false;
-        this.boids = [];
-        this.grid = [];
-    }
+export const createSim = () => {
 
-    init(canvas: HTMLCanvasElement): void {
-        if (this.canvas) {
+    const CELL_SIZE = 64;
+    let canvas: HTMLCanvasElement | null = null;
+    let ctx: CanvasRenderingContext2D | null = null;
+    let showGrid: boolean = true;
+    let showFPS: boolean = true;
+    let enablePerformanceMode: boolean = true;
+    let boids: Boid[] = [];
+    let grid: Cell[][];
+
+    const init = (canvasElement: HTMLCanvasElement): void => {
+
+        if (canvas !== null) {
             console.error('Cannot re-initialise the simulation');
             return;
         }
 
-        this.canvas = canvas;
-        this.ctx = this.canvas.getContext("2d")!;
+        canvas = canvasElement;
+        ctx = canvas.getContext("2d")!;
 
-        this.grid = generateGridFromCanvas(canvas, 64, '#ffe282');
+        grid = generateGridFromCanvas(canvas, 64, '#ffe282');
 
-        createRealtimeUpdate(60, window, this.tick.bind(this));
+        createRealtimeUpdate(60, window, tick);
+
     }
 
-    hasInit(): boolean {
-        return this.canvas !== null;
+    const hasInit = (): boolean => {
+        return canvas !== null;
     }
 
-    spawn(amount: number): void {
-        if (!this.canvas) {
+    const spawn = (count: number): void => {
+
+        if (canvas === null) {
             console.error('Simulation has not been initialised');
             return;
         }
 
-        //Todo: Clear spatial caches
-
-        for (let i = 0; i < amount; i++) {
-            const boid: Boid = createRandomlyOnACanvas(this.canvas, 4, 8, '#FFFFFFFF', 32);
+        for (let i = 0; i < count; i++) {
+            const boid: Boid = createRandomlyOnACanvas(canvas, 4, 8, '#FFFFFFFF', 32);
             randomizeVelocityDirection(boid);
-            this.boids.push(boid);
+            boids.push(boid);
         }
 
-        //Todo: Regenerate spatial caches
     }
 
-    clear(): void {
-        if (!this.canvas) {
+    const clear = (): void => {
+
+        if (canvas === null) {
             console.error('Simulation has not been initialised');
             return;
         }
 
-        //Todo: Clear spatial caches
-
-        this.boids.length = 0;
+        boids.length = 0;
     }
 
-    setShowGrid(on: boolean): void {
-        if (!this.canvas) {
+    const setShowGrid = (on: boolean): void => {
+        if (canvas === null) {
             console.error('Simulation has not been initialised');
             return;
         }
-        this.showGrid = on;
+
+        showGrid = on;
     }
 
-    setPerformanceMode(on: boolean): void {
-        if (!this.canvas) {
+    const setPerformanceMode = (on: boolean): void => {
+        if (canvas === null) {
             console.error('Simulation has not been initialised');
             return;
         }
-        this.enablePerformanceMode = on;
+
+        enablePerformanceMode = on;
     }
 
-    setShowFPS(on: boolean): void {
-        if (!this.canvas) {
+    const setShowFPS = (on: boolean): void => {
+        if (canvas === null) {
             console.error('Simulation has not been initialised');
             return;
         }
-        this.showFPS = on;
+
+        showFPS = on;
     }
 
 
-    private tick(dt: number, fps:number): void {
+    const tick = (dt: number, fps: number): void => {
 
-        if (!this.ctx || !this.canvas) return;
-
-        const canvas = this.canvas;
-        const ctx = this.ctx;
+        if (canvas === null || ctx === null) return;
 
         //Collision detection and response
-        if(this.enablePerformanceMode){
-            this.fastCollisions();
-        }else
-        {
-            this.collideBoidsTogether(this.boids);
+        if (enablePerformanceMode) {
+            fastCollisions();
+        } else {
+            collideBoidsTogether(boids);
         }
 
-
         //Bounce boids off walls and move them
-        this.boids.forEach(boid=>{
+        for (const boid of boids) {
+
             const collision = collideAndBounceOffCanvas(boid, canvas);
 
             if (collision) {
@@ -138,45 +127,47 @@ class Sim {
             }
 
             update(boid, dt);
-        });
+        }
 
         //Rendering
 
-        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        if (this.showGrid) {
-            this.renderGrid(ctx);
+        if (showGrid) {
+            renderGrid(ctx);
         }
 
-        this.renderBoids();
+        renderBoids();
 
-        if(this.showFPS){
-            this.renderFPS(ctx, fps);
+        if (showFPS) {
+            renderFPS(ctx, fps);
         }
     }
 
+    //Collisions
 
-    private fastCollisions() {
-
+    const fastCollisions = (): void => {
         //Subsets all boids into cells so the n^2 can work with a
         //lower amount of candidates at once and is much faster.
 
-        iterateGrid(this.grid, cell => {
+        iterateGrid(grid, cell => {
             cell.boids = [];
         });
 
-        this.boids.forEach(b=>{
-            const cell = getCellFromCanvasPos(this.grid,CELL_SIZE, b.pos);
-            if(!cell)return;
+        for (const b of boids) {
+            const cell = getCellFromCanvasPos(grid, CELL_SIZE, b.pos);
+            if (!cell) continue;
             cell.boids.push(b);
+        }
+
+        iterateGrid(grid, cell => {
+            collideBoidsTogether(cell.boids);
         });
 
-        iterateGrid(this.grid, cell => {
-            this.collideBoidsTogether(cell.boids);
-        });
     }
 
-    private collideBoidsTogether(boids:Boid[]){
+    const collideBoidsTogether = (boids: Boid[]): void => {
+
         //Low performance n^2 boid v boid collision + response with large amounts
         //of boids
 
@@ -209,48 +200,46 @@ class Sim {
                 }
             }
         }
+
     }
 
     //Rendering
 
-    private renderGrid(ctx:CanvasRenderingContext2D){
+    const renderGrid = (ctx: CanvasRenderingContext2D): void => {
         const coldCell = colours.white();
         const hotCell = colours.black();
 
-        if(this.enablePerformanceMode){
-            iterateGrid(this.grid, cell => {
-                cell.colourHEX = rgbToHex(blendRGB(coldCell, hotCell, cell.boids.length/32));
+        if (enablePerformanceMode) {
+            iterateGrid(grid, cell => {
+                cell.colourHEX = rgbToHex(blendRGB(coldCell, hotCell, cell.boids.length / 32));
             });
-        }else{
-            iterateGrid(this.grid, cell => {
+        } else {
+            iterateGrid(grid, cell => {
                 cell.colourHEX = rgbToHex(coldCell);
             });
         }
 
-        renderTiles(ctx, this.grid, CELL_SIZE);
-        renderGridLines(this.grid, CELL_SIZE, ctx, 0.25);
+        renderTiles(ctx, grid, CELL_SIZE);
+        renderGridLines(grid, CELL_SIZE, ctx, 0.25);
+
     }
 
-    private renderFPS(ctx:CanvasRenderingContext2D, fps:number){
+    const renderFPS = (ctx: CanvasRenderingContext2D, fps: number): void => {
         ctx.fillStyle = "#494949";
-        ctx.fillRect(5,32,75,24);
+        ctx.fillRect(5, 32, 75, 24);
         ctx.fillStyle = '#ffffff';
         ctx.font = '16px Verdana';
         ctx.fillText(`FPS: ${fps.toFixed(0)}`, 10, 50);
     }
 
+    const renderBoids = (): void => {
 
-    renderBoids() {
-
-        if (!this.ctx) return;
-
-        const ctx = this.ctx;
+        if (ctx === null) return;
 
         const normalBoidColour = colours.white();
         const collidedBoidColour = colours.red();
 
-        for (let i: number = 0; i < this.boids.length; i++) {
-            const boid: Boid = this.boids[i];
+        for (const boid of boids) {
             boid.colourHEX = rgbToHex(blendRGB(normalBoidColour, collidedBoidColour, boid.collisionCoolDownSeconds));
             ctx.beginPath();
             ctx.lineWidth = 1;
@@ -259,7 +248,16 @@ class Sim {
             ctx.fill();
             ctx.stroke();
         }
-    }
-}
 
-export default Sim;
+    }
+
+    return {
+        init,
+        hasInit,
+        spawn,
+        clear,
+        setShowGrid,
+        setPerformanceMode,
+        setShowFPS
+    } as Sim;
+}
