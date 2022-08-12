@@ -15,6 +15,8 @@ have fun with some 2D physics and collision detection.
 * No WebGL or anthing fancy, just standard HTML5 Canvas
 * Reasonably clean...
 
+![Preview](boids/preview.png)
+
 ## How to use?
 
 1. Clone this Git Repo
