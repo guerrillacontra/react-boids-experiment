@@ -9,6 +9,7 @@ import {
 import {Cell, generateGridFromCanvas, getCellFromCanvasPos, iterateGrid, renderGridLines, renderTiles} from "./grid";
 import {createRealtimeUpdate} from "./realtime";
 import {blendRGB, colours, rgbToHex} from "./colour";
+import {Vector2} from "./vector2";
 
 
 export interface Sim {
@@ -23,7 +24,7 @@ export interface Sim {
 
 export const createSim = () => {
 
-    const CELL_SIZE = 64;
+    const CELL_SIZE = 16;
     let canvas: HTMLCanvasElement | null = null;
     let ctx: CanvasRenderingContext2D | null = null;
     let showGrid: boolean = true;
@@ -42,7 +43,7 @@ export const createSim = () => {
         canvas = canvasElement;
         ctx = canvas.getContext("2d")!;
 
-        grid = generateGridFromCanvas(canvas, 64, '#ffe282');
+        grid = generateGridFromCanvas(canvas, CELL_SIZE, '#ffe282');
 
         createRealtimeUpdate(60, window, tick);
 
@@ -146,6 +147,46 @@ export const createSim = () => {
 
     //Collisions
 
+    const getSurroundingCells = (grid: Cell[][], boid: Boid, cellSize: number): Cell[] => {
+
+        const surrounding: Cell[] = [];
+
+        const directions: Vector2[] = [
+            //w
+            {x: -1, y: 0},
+            //nw
+            {x: -1, y: 1},
+            //n
+            {x: 0, y: 1},
+            //ne
+            {x: 1, y: 1},
+            //e
+            {x: 1, y: 0},
+            //se
+            {x: 1, y: -1},
+            //s
+            {x: 0, y: -1},
+            //sw
+            {x: -1, y: -1}
+        ];
+
+        for (let i = 0; i < directions.length; i++){
+            const dir = directions[i];
+
+            const transformedPos:Vector2 = {
+                x: boid.pos.x + (boid.radius * dir.x),
+                y: boid.pos.y + (boid.radius * dir.y)
+            };
+
+            const cell: Cell | null = getCellFromCanvasPos(grid, cellSize, transformedPos);
+
+            if (cell !== null) surrounding.push(cell);
+        }
+
+        return surrounding;
+
+    }
+
     const fastCollisions = (): void => {
         //Subsets all boids into cells so the n^2 can work with a
         //lower amount of candidates at once and is much faster.
@@ -155,9 +196,19 @@ export const createSim = () => {
         });
 
         for (const b of boids) {
-            const cell = getCellFromCanvasPos(grid, CELL_SIZE, b.pos);
-            if (!cell) continue;
-            cell.boids.push(b);
+
+            const cellsToCheck = getSurroundingCells(grid, b, CELL_SIZE);
+
+            const originCell = getCellFromCanvasPos(grid, CELL_SIZE, b.pos);
+
+            if (originCell) {
+                cellsToCheck.push(originCell);
+            }
+
+            for (const cell of cellsToCheck) {
+                if(cell.boids.indexOf(b) !== -1)continue;
+                cell.boids.push(b);
+            }
         }
 
         iterateGrid(grid, cell => {
@@ -211,11 +262,11 @@ export const createSim = () => {
 
         if (enablePerformanceMode) {
             iterateGrid(grid, cell => {
-                cell.colourHEX = rgbToHex(blendRGB(coldCell, hotCell, cell.boids.length / 32));
+                cell.colourHEX = rgbToHex(blendRGB(coldCell, hotCell, cell.boids.length / 4));
             });
         } else {
             iterateGrid(grid, cell => {
-                cell.colourHEX = rgbToHex(coldCell);
+                cell.colourHEX = rgbToHex(hotCell);
             });
         }
 

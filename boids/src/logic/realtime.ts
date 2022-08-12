@@ -23,10 +23,13 @@ export const createRealtimeUpdate = (fps:number, window:Window, callback:(dt:num
             const fps:number = Math.round(elapsedFrames / elapsedTime);
             callback(dt, fps);
 
-            elapsedTime = 0;
-            elapsedFrames = 0;
 
             lastTime = currentTime - deltaTime % interval;
+        }
+
+        if(elapsedTime >= 1){
+            elapsedTime -=1;
+            elapsedFrames = 0;
         }
 
         elapsedFrames ++;

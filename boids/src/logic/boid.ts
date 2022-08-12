@@ -59,6 +59,8 @@ export type CollisionResult = {
     newVelocity: Vector2
 }
 
+
+
 export const collideAndBounceOffCanvas = (boid: Boid, canvas: HTMLCanvasElement): CollisionResult | null => {
 
     let pos: Vector2 = {...boid.pos};

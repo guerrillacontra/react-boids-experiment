@@ -1,11 +1,14 @@
-import React, {useState} from "react";
+import React, {useMemo, useRef, useState} from "react";
 import Toolbar from "./Toolbar";
 import SimulationCanvas from "./SimulationCanvas";
 import {createSim, Sim} from "../logic/sim";
 
-const sim: Sim = createSim();
+const PersistentCanvas = React.memo(SimulationCanvas);
 
 function App() {
+
+    const sim = useRef<Sim>(createSim());
+
     //Default values for the sim and UI to start with
     const defaultShowGrid = true;
     const defaultEnablePerformance = true;
@@ -17,25 +20,25 @@ function App() {
     //Sim hooks from the UI
 
     const onSpawnClicked = () => {
-        sim.spawn(25);
+        sim.current.spawn(25);
         setBoidsCount(prevState => prevState + 25);
     };
 
     const onClearClicked = () => {
-        sim.clear();
+        sim.current.clear();
         setBoidsCount(0);
     };
 
     const onGridToggled = (checked: boolean) => {
-        sim.setShowGrid(checked);
+        sim.current.setShowGrid(checked);
     };
 
     const onPerformanceToggled = (checked: boolean) => {
-        sim.setPerformanceMode(checked);
+        sim.current.setPerformanceMode(checked);
     };
 
     const onFpsToggled = (checked: boolean) => {
-        sim.setShowFPS(checked);
+        sim.current.setShowFPS(checked);
     };
 
     return (
@@ -46,7 +49,7 @@ function App() {
                      performanceChecked={defaultEnablePerformance} performanceToggled={onPerformanceToggled}
                      fpsChecked={defaultShowFPS} fpsToggled={onFpsToggled}/>
             <div className="flex justify-center mt-4">
-                <SimulationCanvas sim={sim}/>
+                <PersistentCanvas sim={sim.current}/>
             </div>
         </div>
     )

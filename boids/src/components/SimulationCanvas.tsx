@@ -18,7 +18,6 @@ function SimulationCanvas(props: CanvasProps) {
     const canvasRef: Ref<HTMLCanvasElement> = createRef();
 
     useEffect(() => {
-
         const canvas: HTMLCanvasElement = canvasRef?.current!;
 
         sim.init(canvas);
