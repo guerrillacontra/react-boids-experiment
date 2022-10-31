@@ -1,7 +1,7 @@
 import {
     Boid,
     collideAndBounceOffCanvas,
-    collideAndBounceOffOtherBoid,
+    generateCollisionBouncePair,
     createRandomlyOnACanvas,
     randomizeVelocityDirection,
     update
@@ -225,29 +225,22 @@ export const createSim = () => {
         for (let i = 0; i < boids.length; i++) {
             const a: Boid = boids[i];
 
-            for (let k = 0; k < boids.length; k++) {
-
-                //same boid
-                if (k === i) continue;
+            for (let k = i+1; k < boids.length; k++) {
 
                 const b: Boid = boids[k];
 
-                const avb = collideAndBounceOffOtherBoid(a, b);
+                const collisionPair = generateCollisionBouncePair(a, b);
 
-                if (avb) {
+                if (collisionPair) {
+                    const [resA, resB] = collisionPair;
 
-                    const bva = collideAndBounceOffOtherBoid(b, a);
-
-                    a.pos = avb.newPos;
-                    a.vel = avb.newVelocity;
+                    a.pos = resA.newPos;
+                    a.vel = resA.newVelocity;
                     a.collisionCoolDownSeconds = 1;
 
-                    //Technically bva won't ever be null as avb wasn't but this pleases my brain :)
-                    if (bva) {
-                        b.pos = bva.newPos;
-                        b.vel = bva.newVelocity;
-                        b.collisionCoolDownSeconds = 1;
-                    }
+                    b.pos = resB.newPos;
+                    b.vel = resB.newVelocity;
+                    b.collisionCoolDownSeconds = 1;
                 }
             }
         }

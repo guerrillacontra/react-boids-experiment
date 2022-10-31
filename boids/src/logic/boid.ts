@@ -102,39 +102,47 @@ export const collideAndBounceOffCanvas = (boid: Boid, canvas: HTMLCanvasElement)
     };
 }
 
-export const collideAndBounceOffOtherBoid = (a: Boid, b: Boid): CollisionResult | null => {
+export const generateCollisionBouncePair = (a: Boid, b: Boid): [CollisionResult, CollisionResult] | null => {
 
     const radii2: number = Math.pow(a.radius + b.radius, 2);
-    const delta: Vector2 = vector.sub(b.pos, a.pos);
-    const mag2: number = vector.mag2(delta);
+    const mag2: number = vector.mag2(vector.sub(b.pos, a.pos));
 
     if (mag2 > radii2) return null;
-
-    let pos: Vector2 = {...a.pos};
-    let vel: Vector2 = {...a.vel};
 
     //dist between both boids
     const mag = Math.sqrt(mag2);
 
-    //coefficient for how much to push a's radii vs b's radii as they could be different
-    const coeff = (a.radius / b.radius) / mag;
+    const generateCollisionBounce = (a: Boid, b: Boid) => {
+        const delta: Vector2 = vector.sub(b.pos, a.pos);
 
-    //Separate the boid from the other
-    const pushOffset: Vector2 = vector.scale(delta, -0.5 * coeff);
+        let pos: Vector2 = {...a.pos};
+        let vel: Vector2 = {...a.vel};
 
-    pos.x += pushOffset.x;
-    pos.y += pushOffset.y;
+        //coefficient for how much to push a's radii vs b's radii as they could be different
+        const coeff = (a.radius / b.radius) / mag;
 
-    //Make the boid bounce off the other
-    const leftNormal = vector.leftNormal(delta);
-    const reflect = vector.normalized(vector.reflect(b.vel, leftNormal));
-    const velSpeed: number = vector.mag(a.vel);
+        //Separate the boid from the other
+        const pushOffset: Vector2 = vector.scale(delta, -0.5 * coeff);
 
-    vel.x = reflect.x * velSpeed;
-    vel.y = reflect.y * velSpeed;
+        pos.x += pushOffset.x;
+        pos.y += pushOffset.y;
 
-    return {
-        newPos: pos,
-        newVelocity: vel
-    };
+        //Make the boid bounce off the other
+        const leftNormal = vector.leftNormal(delta);
+        const reflect = vector.normalized(vector.reflect(b.vel, leftNormal));
+        const velSpeed: number = vector.mag(a.vel);
+
+        vel.x = reflect.x * velSpeed;
+        vel.y = reflect.y * velSpeed;
+
+        return {
+            newPos: pos,
+            newVelocity: vel
+        };
+    }
+
+    return [
+        generateCollisionBounce(a,b),
+        generateCollisionBounce(b,a)
+    ];
 }
